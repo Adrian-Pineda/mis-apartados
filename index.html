@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="es-MX">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Mis Apartados</title>
+  <meta name="theme-color" content="#0f766e">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Apartados">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="top">
+    <div class="top-in">
+      <h1>Mis Apartados</h1>
+      <nav class="nav" id="nav" aria-label="Secciones">
+        <button data-vista="resumen" class="activa"><span class="ico">◔</span><span>Resumen</span></button>
+        <button data-vista="movs"><span class="ico">⇅</span><span>Movimientos</span></button>
+        <button data-vista="aps"><span class="ico">▤</span><span>Apartados</span></button>
+        <button data-vista="conc"><span class="ico">⚖</span><span>Conciliar</span></button>
+        <button data-vista="cfg"><span class="ico">⚙</span><span>Ajustes</span></button>
+      </nav>
+      <button id="btn-refrescar" class="btn-icono" title="Actualizar" aria-label="Actualizar">↻</button>
+    </div>
+  </header>
+
+  <main id="main">
+    <div id="aviso" class="aviso" hidden></div>
+    <section id="v-resumen" class="vista"></section>
+    <section id="v-movs" class="vista" hidden></section>
+    <section id="v-aps" class="vista" hidden></section>
+    <section id="v-conc" class="vista" hidden></section>
+    <section id="v-cfg" class="vista" hidden></section>
+  </main>
+
+  <section id="conexion" class="conexion" hidden>
+    <form id="form-conexion" class="card">
+      <h2>Conectar con tu hoja</h2>
+      <p class="sub">Pega la URL de tu Web App de Apps Script y el token que te dio <code>verToken()</code>. Se guardan solo en este dispositivo.</p>
+      <label>URL de la Web App
+        <input name="url" type="url" required placeholder="https://script.google.com/macros/s/…/exec" autocomplete="off">
+      </label>
+      <label>Token
+        <input name="token" type="password" required autocomplete="off" placeholder="Token de acceso">
+      </label>
+      <p class="err" id="err-conexion" role="alert"></p>
+      <button class="primario" type="submit">Conectar</button>
+    </form>
+  </section>
+
+  <dialog id="modal"><form method="dialog" id="modal-form"></form></dialog>
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+  <script src="app.js" defer></script>
+</body>
+</html>

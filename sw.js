@@ -1,5 +1,5 @@
 // Service worker: permite instalar la app y abrir su "cascarón" sin red. Los DATOS nunca se guardan en caché.
-const VERSION = 'apartados-v1';
+const VERSION = 'apartados-v2';
 const CASCARON = ['./', 'index.html', 'app.js', 'styles.css', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png'];
 
 self.addEventListener('install', e => {

@@ -1,6 +1,6 @@
 {
-  "name": "Mis Apartados",
-  "short_name": "Apartados",
+  "name": "Monitor Financiero",
+  "short_name": "Monitor",
   "description": "Control de apartados de ahorro sobre una sola cuenta bancaria",
   "lang": "es-MX",
   "start_url": "./",

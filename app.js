@@ -1,5 +1,8 @@
-/* Mis Apartados — frontend (HTML + JS puro). Toda la contabilidad la hace el backend; aquí solo se muestra y se captura. */
+/* Monitor Financiero — frontend (HTML + JS puro). Toda la contabilidad la hace el backend; aquí solo se muestra y se captura. */
 'use strict';
+
+const APP_VERSION = '1.1.0';       // versión del frontend; súbela cada vez que publiques cambios en frontend/
+const NOMBRE_APP = 'Monitor Financiero';
 
 // ---------- Utilidades ----------
 const $ = (s, el = document) => el.querySelector(s);
@@ -388,11 +391,13 @@ function renderCfg() {
         <button class="primario" type="submit">Guardar</button>
       </form></div>
     <div class="card"><h2>Tasa anual (historial)</h2>
-      <p class="sub">El interés diario usa la tasa vigente ese día, sobre ${c.dias_anio} días.</p>
-      <table class="tabla num"><thead><tr><th>Vigente desde</th><th class="r">Tasa anual</th><th></th></tr></thead><tbody>
-        ${S.tasas.map(t => `<tr><td>${fmtFecha(t.fecha_inicio)}</td><td class="r">${esc(t.tasa_pct)}%</td><td class="r"><button class="peligro mini" data-acc="borrar-tasa" data-id="${t.fecha_inicio}">Quitar</button></td></tr>`).join('') || '<tr><td colspan="3" class="vacio">Sin tasa registrada: no se generan intereses.</td></tr>'}
+      <p class="sub">El interés diario usa la tasa vigente ese día, sobre ${c.dias_anio} días. La tasa <b>general</b> aplica a todos los apartados; un apartado puede tener además una tasa <b>propia</b> que sustituye a la general desde su fecha.</p>
+      <table class="tabla num"><thead><tr><th>Aplica a</th><th>Desde</th><th class="r">Tasa</th><th></th></tr></thead><tbody>
+        ${S.tasas.slice().sort((a, b) => (a.apartado_id || '').localeCompare(b.apartado_id || '') || a.fecha_inicio.localeCompare(b.fecha_inicio)).map(t => `<tr><td>${t.apartado_id ? esc(nomAp(t.apartado_id) || '?') : '<b>General</b>'}</td><td>${fmtFecha(t.fecha_inicio)}</td><td class="r">${esc(t.tasa_pct)}%</td><td class="r"><button class="peligro mini" data-acc="borrar-tasa" data-id="${t.fecha_inicio}" data-ap="${esc(t.apartado_id)}">Quitar</button></td></tr>`).join('') || '<tr><td colspan="4" class="vacio">Sin tasa registrada: no se generan intereses.</td></tr>'}
       </tbody></table>
       <form class="form" id="f-tasa" style="margin-top:12px">
+        <label>Aplica a<select name="apartado_id"><option value="">Todos los apartados (tasa general)</option>
+          ${S.apartados.filter(a => a.estado !== 'eliminado').map(a => `<option value="${a.id}">Solo ${esc(a.nombre)}</option>`).join('')}</select></label>
         <div class="dos"><label>Vigente desde<input type="date" name="fecha_inicio" required max="${S.hoy}" value="${S.hoy}"></label>
           <label>Tasa anual (%)<input name="tasa_pct" required inputmode="decimal" placeholder="10.00"></label></div>
         <p class="err" id="err-tasa" role="alert"></p>
@@ -410,13 +415,15 @@ function renderCfg() {
     <div class="card"><div class="fila entre"><h2>Registro de cambios</h2><button class="sec mini" data-acc="ver-cambios">Cargar últimos 50</button></div>
       <div id="cambios"></div></div>
     <div class="card"><h2>Conexión</h2>
-      <p class="sub">Versión ${esc(S.version)} · Hoy (México): ${fmtFecha(S.hoy)}<br>Datos guardados solo en tu Google Sheets; este dispositivo guarda la URL y el token.</p>
+      <p class="sub">App <b>v${APP_VERSION}</b> · Servidor (Apps Script) <b>v${esc(S.version)}</b>${S.version.split('.').slice(0, 2).join('.') !== APP_VERSION.split('.').slice(0, 2).join('.') ? ' <b class="neg">⚠ versiones distintas: publica la que falte</b>' : ''} · Hoy (México): ${fmtFecha(S.hoy)}<br>Datos guardados solo en tu Google Sheets; este dispositivo guarda la URL y el token.</p>
       <div class="botones" style="justify-content:flex-start;margin-top:10px"><button class="peligro" data-acc="salir">Cerrar sesión en este dispositivo</button></div></div>`;
 }
 $('#v-cfg').addEventListener('submit', async e => {
   e.preventDefault();
   const fd = Object.fromEntries(new FormData(e.target)), b = botonEnvio(e); b.disabled = true;
   const errEl = e.target.id === 'f-cfg' ? $('#err-cfg') : $('#err-tasa'); errEl.textContent = '';
+  if (e.target.id === 'f-tasa' && S.tasas.some(t => t.fecha_inicio === fd.fecha_inicio && (t.apartado_id || '') === fd.apartado_id) &&
+      !confirm('Ya existe una tasa con esa fecha para ese destino. ¿Reemplazarla? Se recalculará el historial desde esa fecha.')) { b.disabled = false; return; }
   try { await mutar(e.target.id === 'f-cfg' ? 'config_guardar' : 'tasa_guardar', fd, 'Guardado y recalculado'); }
   catch (er) { errEl.textContent = er.message; b.disabled = false; }
 });
@@ -477,9 +484,9 @@ const acciones = {
     if (!confirm('¿Borrar esta conciliación? Si generó ajustes, también se deshacen.')) return;
     try { await mutar('conciliacion_borrar', { id }, 'Conciliación borrada'); } catch (e) { alert(e.message); }
   },
-  async 'borrar-tasa'(id) {
-    if (!confirm(`¿Quitar la tasa vigente desde ${fmtFecha(id)}? Se recalcula todo el historial.`)) return;
-    try { await mutar('tasa_borrar', { fecha_inicio: id }, 'Tasa eliminada'); } catch (e) { alert(e.message); }
+  async 'borrar-tasa'(id, btn) {
+    if (!confirm(`¿Quitar la tasa vigente desde ${fmtFecha(id)}? Se recalcula el historial desde esa fecha.`)) return;
+    try { await mutar('tasa_borrar', { fecha_inicio: id, apartado_id: btn.dataset.ap || '' }, 'Tasa eliminada'); } catch (e) { alert(e.message); }
   },
   async recalcular() { try { S = await api('recalcular'); renderTodo(); toast('Intereses recalculados'); } catch (e) { alert(e.message); } },
   async 'ver-cambios'() {
@@ -492,6 +499,59 @@ const acciones = {
 };
 document.addEventListener('click', e => { const b = e.target.closest('[data-acc]'); if (b && acciones[b.dataset.acc]) acciones[b.dataset.acc](b.dataset.id, b); });
 document.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches?.('article[data-acc]')) { e.preventDefault(); e.target.click(); } });
+
+// ---------- Ayuda ----------
+function renderAyuda() {
+  const sec = (t, html, abierta = false) => `<details class="card ayuda"${abierta ? ' open' : ''}><summary>${t}</summary>${html}</details>`;
+  $('#v-ayuda').innerHTML = `
+    <div class="card"><div class="fila entre"><h2>Instrucciones de uso</h2><button class="sec mini" data-acc="cerrar-ayuda">Volver</button></div>
+      <p class="sub">Esta app lleva el control de cuánto del saldo de <b>una sola cuenta bancaria</b> corresponde a cada objetivo de ahorro (apartado), y cuánto interés ha ganado cada uno.</p></div>
+    ${sec('Primeros pasos', `<ol>
+      <li>En <b>Ajustes ▸ Tasa anual</b> captura la tasa de tu banco y la fecha desde la que rige. Sin tasa no se generan intereses.</li>
+      <li>En <b>Apartados ▸ Nuevo apartado</b> crea cada objetivo con su <b>saldo inicial</b> y la <b>fecha de inicio</b> (desde cuándo ese dinero está en la cuenta).</li>
+      <li>Registra tus movimientos en <b>Movimientos</b> (botón <b>+</b>).</li>
+      <li>De vez en cuando compara con el banco en <b>Conciliar</b>.</li></ol>`, true)}
+    ${sec('Resumen', `<p>Muestra el <b>saldo total</b> y el de cada apartado dividido en <b>capital aportado</b> e <b>intereses ganados</b>, el interés de <b>hoy</b>, del <b>mes</b> y el <b>acumulado</b>, y una gráfica de crecimiento. La etiqueta <b>✓ Cuadra</b> confirma que la suma de apartados coincide con el total calculado. Toca un apartado para ver sus movimientos.</p>`)}
+    ${sec('Apartados', `<ul>
+      <li><b>Editar</b> cambia nombre, notas, color o ícono. Cambiar el saldo inicial o la fecha de inicio recalcula todo el historial.</li>
+      <li><b>Archivar</b> o <b>eliminar</b> solo es posible con saldo en cero: antes traspasa o retira su dinero. El historial siempre se conserva.</li>
+      <li>Los archivados se pueden <b>reactivar</b>.</li></ul>`)}
+    ${sec('Movimientos', `<ul>
+      <li><b>Depósito</b> suma a un apartado; <b>retiro</b> resta; <b>traspaso</b> mueve dinero de un apartado a otro sin cambiar el total.</li>
+      <li>La app <b>bloquea</b> cualquier retiro o traspaso que deje un apartado en negativo, y fechas futuras.</li>
+      <li>Puedes <b>editar</b> o <b>borrar</b> movimientos antiguos: se recalcula todo el historial. Si el cambio dejara un saldo negativo en algún día, se rechaza.</li>
+      <li>Un movimiento del día D empieza a generar interés el día siguiente.</li>
+      <li>Filtra por apartado, tipo y fechas, y exporta a CSV.</li></ul>`)}
+    ${sec('Intereses y tasas', `<ul>
+      <li>Interés diario = saldo del apartado al cierre del día anterior × tasa anual ÷ 365, redondeado a centavo.</li>
+      <li><b>Capitalización diaria:</b> el interés se suma al saldo cada día. <b>Mensual:</b> se acumula y se suma al saldo a fin de mes.</li>
+      <li>La tasa tiene <b>historial</b>: para un cambio de tasa agrega una fila nueva con la fecha en que empieza; los días anteriores no cambian. Editar o quitar una fila existente sí recalcula esos días.</li>
+      <li><b>Tasa propia de un apartado:</b> en Ajustes ▸ Tasa anual elige "Solo [apartado]". Desde su fecha ese apartado usa su tasa; los demás siguen con la general.</li>
+      <li>La <b>retención de ISR</b> solo sirve para mostrar el rendimiento neto; no cambia los saldos.</li></ul>`)}
+    ${sec('Conciliar con el banco', `<ol>
+      <li>Captura la fecha y el saldo real que muestra el banco <b>al cierre</b> de ese día y toca <b>Comparar</b>.</li>
+      <li>Si hay diferencia (por ejemplo, intereses reales distintos a los calculados), elige: solo registrarla, repartirla <b>proporcional</b> al saldo de cada apartado, o repartirla <b>manualmente</b>.</li>
+      <li>El ajuste queda como movimiento. Si te equivocas, borra la conciliación en el historial y se deshace.</li></ol>`)}
+    ${sec('Instalar en el celular', `<ul><li><b>Android (Chrome):</b> menú ⋮ ▸ Instalar app.</li>
+      <li><b>iPhone (Safari):</b> Compartir ▸ Añadir a pantalla de inicio.</li>
+      <li>En cada dispositivo pega una vez la URL de tu Web App y tu token.</li></ul>`)}
+    ${sec('Respaldos y seguridad', `<ul>
+      <li>Tus datos viven en tu Google Sheets. Cada domingo se hace una copia automática en tu Drive (carpeta <i>Respaldos Apartados</i>).</li>
+      <li>Descarga CSV desde <b>Ajustes</b> de vez en cuando y guárdalos en otro lugar.</li>
+      <li>El <b>token</b> es tu contraseña: no lo compartas. Si se filtra, ejecuta <code>rotarToken</code> en Apps Script.</li>
+      <li>Evita editar la hoja a mano; todo se recalcula desde Apartados, Movimientos, Tasas y Conciliaciones.</li></ul>`)}
+    ${sec('Problemas comunes', `<ul>
+      <li><b>"Token incorrecto":</b> vuelve a copiarlo de tu gestor de contraseñas, sin espacios.</li>
+      <li><b>"No hay conexión":</b> revisa internet y que la URL termine en <code>/exec</code>.</li>
+      <li><b>"No cuadra" o saldo negativo:</b> alguien editó la hoja a mano. Revisa Ajustes ▸ Registro de cambios o restaura un respaldo.</li>
+      <li>Si no ves cambios después de una actualización de la app, ciérrala por completo y ábrela de nuevo.</li></ul>`)}`;
+}
+$('#nombre-app').textContent = NOMBRE_APP;
+$('#version-app').textContent = 'v' + APP_VERSION;
+document.title = NOMBRE_APP;
+$('#btn-ayuda').addEventListener('click', () => irA('ayuda'));
+acciones['cerrar-ayuda'] = () => irA('resumen');
+renderAyuda();
 
 // ---------- Arranque ----------
 function renderTodo() {

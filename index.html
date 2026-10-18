@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Mis Apartados</title>
+  <title>Monitor Financiero</title>
   <meta name="theme-color" content="#0f766e">
   <meta name="robots" content="noindex, nofollow">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-title" content="Apartados">
+  <meta name="apple-mobile-web-app-title" content="Monitor">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icons/icon-192.png">
   <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -16,7 +16,7 @@
 <body>
   <header class="top">
     <div class="top-in">
-      <h1>Mis Apartados</h1>
+      <h1><span id="nombre-app">Monitor Financiero</span> <small id="version-app" class="version"></small></h1>
       <nav class="nav" id="nav" aria-label="Secciones">
         <button data-vista="resumen" class="activa"><span class="ico">◔</span><span>Resumen</span></button>
         <button data-vista="movs"><span class="ico">⇅</span><span>Movimientos</span></button>
@@ -24,7 +24,10 @@
         <button data-vista="conc"><span class="ico">⚖</span><span>Conciliar</span></button>
         <button data-vista="cfg"><span class="ico">⚙</span><span>Ajustes</span></button>
       </nav>
-      <button id="btn-refrescar" class="btn-icono" title="Actualizar" aria-label="Actualizar">↻</button>
+      <span class="fila" style="gap:6px">
+        <button id="btn-ayuda" class="btn-icono" title="Instrucciones de uso" aria-label="Instrucciones de uso">?</button>
+        <button id="btn-refrescar" class="btn-icono" title="Actualizar" aria-label="Actualizar">↻</button>
+      </span>
     </div>
   </header>
 
@@ -35,6 +38,7 @@
     <section id="v-aps" class="vista" hidden></section>
     <section id="v-conc" class="vista" hidden></section>
     <section id="v-cfg" class="vista" hidden></section>
+    <section id="v-ayuda" class="vista" hidden></section>
   </main>
 
   <section id="conexion" class="conexion" hidden>

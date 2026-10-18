@@ -122,7 +122,7 @@ table.tabla td.r, table.tabla th.r { text-align: right; }
   .kpis { max-width: 520px; }
   .fab { bottom: 24px; right: 24px; }
   .toast { bottom: 24px; }
-  .filtros { grid-template-columns: repeat(4, 1fr); }
+  .filtros { grid-template-columns: repeat(5, 1fr); }
   .dos-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
 }
 @media (min-width: 1100px) { .tarjetas { grid-template-columns: repeat(3, 1fr); } }
@@ -134,3 +134,21 @@ details.ayuda[open] summary { margin-bottom: 8px; }
 details.ayuda ul, details.ayuda ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
 details.ayuda p { margin: 0; }
 .version { font-size: .68rem; font-weight: 600; color: var(--tx2); background: var(--pri-suave); padding: 2px 7px; border-radius: 99px; vertical-align: middle; margin-left: 4px; }
+
+/* Bancos, cuentas y privacidad */
+.banco { display: grid; gap: 10px; }
+.banco-t { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; border-bottom: 2px solid var(--pri); padding-bottom: 4px; }
+.banco-t h2 { color: var(--pri); }
+.cuenta { display: grid; gap: 8px; }
+.cuenta-t { display: flex; justify-content: space-between; gap: 10px; font-weight: 600; }
+.cuenta-card h3 { margin: 0; }
+.chip { font-size: .72rem; padding: 1px 8px; border-radius: 99px; background: var(--pri-suave); color: var(--pri); font-weight: 600; white-space: nowrap; }
+label.inline { display: inline-flex; align-items: center; gap: 6px; }
+label.inline select { width: auto; min-height: 36px; padding: 4px 8px; max-width: 220px; }
+.top .fila { flex-wrap: nowrap; }
+.top h1 { min-width: 0; }
+@media (max-width: 480px) {
+  .top-in { padding: 8px 12px; gap: 8px; }
+  .top h1 { font-size: .95rem; }
+  .btn-icono { width: 36px; height: 36px; font-size: 1.05rem; }
+}
